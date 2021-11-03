@@ -1,2 +1,11 @@
 .idea/
 *.iml
+
+easy-rsa/*
+certificates/*
+output.yaml
+
+.terraform*
+
+*.tfstate
+*.tfstate.backup

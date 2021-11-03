@@ -1,0 +1,210 @@
+
+locals {
+  prefix_name     = var.name_prefix != "" ? var.name_prefix : var.resource_group_name
+  name            = lower(replace("${local.prefix_name}-vpn-${var.resource_label}", "_", "-"))
+}
+
+
+#dependencies:
+# - certificate manager instance already created
+# - service auth already created
+
+
+data "ibm_resource_group" "resource_group" {
+  name = var.resource_group_name
+}
+
+
+
+
+# reference existing certificate manager instance
+data "ibm_resource_instance" "cm" {
+    name     = var.certificate_manager_instance_name
+    location = var.region
+    service  = "cloudcerts"
+}
+
+
+# Generate the Server and Client certificates and import them into the Certificate Manager instance
+# pass in certificate ID.  if empty, create, otherwise use what is passed in
+# need:
+# signing cert
+# server cert (use signing cert)
+# client cert (use signing cert)
+
+resource null_resource create_certificates {                                                          
+
+    provisioner "local-exec" {                                                                          
+        command = "${path.module}/scripts/create-certificates.sh"
+
+    }
+}
+
+data "local_file" "ca" {
+   depends_on = [
+     null_resource.create_certificates
+   ]
+    filename = "${path.module}/certificates/ca.crt"
+}
+
+data "local_file" "server_cert" {
+   depends_on = [
+     null_resource.create_certificates
+   ]
+    filename = "${path.module}/certificates/issued/vpn-server.vpn.ibm.com.crt"
+}
+
+data "local_file" "server_key" {
+   depends_on = [
+     null_resource.create_certificates
+   ]
+    filename = "${path.module}/certificates/private/vpn-server.vpn.ibm.com.key"
+}
+
+data "local_file" "client_cert" {
+   depends_on = [
+     null_resource.create_certificates
+   ]
+    filename = "${path.module}/certificates/issued/client1.vpn.ibm.com.crt"
+}
+
+data "local_file" "client_key" {
+   depends_on = [
+     null_resource.create_certificates
+   ]
+    filename = "${path.module}/certificates/private/client1.vpn.ibm.com.key"
+}
+
+
+resource "ibm_certificate_manager_import" "server_cert" {
+  certificate_manager_instance_id = data.ibm_resource_instance.cm.id
+  name                            = "vpn-server-cert"
+  description                     = "VPN server certificate"
+  data = {
+    content = data.local_file.server_cert.content
+    intermediate = data.local_file.ca.content
+    priv_key = data.local_file.server_key.content
+  }
+}
+
+resource "ibm_certificate_manager_import" "client_cert" {
+  certificate_manager_instance_id = data.ibm_resource_instance.cm.id
+  name                            = "vpn-client-cert"
+  description                     = "VPN client certificate"
+  data = {
+    content = data.local_file.client_cert.content
+    intermediate = data.local_file.ca.content
+    priv_key = data.local_file.client_key.content
+  }
+}
+
+# data "ibm_certificate_manager_certificate" "server_certificate" {
+#     depends_on = [
+#       ibm_certificate_manager_import.server_cert
+#     ]
+#     certificate_manager_instance_id=data.ibm_resource_instance.cm.id
+#     name = ibm_certificate_manager_import.server_cert.name
+# }
+
+
+
+
+
+
+
+
+
+# Update the subnet Access Control List that will be used for the VPN server
+
+resource null_resource update_rules {                                                          
+     provisioner "local-exec" {                                                                          
+         command = "${path.module}/scripts/update-rules.sh"
+         environment = {                                                                                   
+             IBMCLOUD_API_KEY = var.ibmcloud_api_key                                             
+             SUBNET_ID = var.subnet_id
+             REGION = var.region
+             RESOURCE_GROUP = data.ibm_resource_group.resource_group.id
+         }
+     }
+ }
+
+
+# Create a Security Group for the VPN Server
+
+resource ibm_is_security_group vpn_security_group {
+  name           = "${local.name}-group"
+  vpc            = var.vpc_id
+  resource_group = data.ibm_resource_group.resource_group.id
+}
+
+resource "ibm_is_security_group_rule" "inbound" {
+  group     = ibm_is_security_group.vpn_security_group.id
+  direction = "inbound"
+  remote    = "0.0.0.0/0"
+}
+
+resource "ibm_is_security_group_rule" "outbound" {
+  group     = ibm_is_security_group.vpn_security_group.id
+  direction = "outbound"
+  remote    = "0.0.0.0/0"
+}
+
+
+
+
+
+
+
+
+# Provision the VPN Server instance & create the VPN Server Routes 
+resource null_resource vpn_server {      
+    depends_on = [
+      ibm_certificate_manager_import.server_cert,
+      ibm_is_security_group.vpn_security_group,
+      ibm_is_security_group_rule.inbound,
+      ibm_is_security_group_rule.outbound,
+      null_resource.update_rules
+    ]                                                    
+
+    provisioner "local-exec" {                                                                          
+        command = "${path.module}/scripts/create-vpn.sh"
+                                                                                                     
+        environment = {                                                                                   
+             IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
+             REGION  =  var.region
+             RESOURCE_GROUP  =  var.resource_group_name
+             VPN_SERVER  =  local.name
+             SUBNET_ID  =  var.subnet_id
+             SERVER_CERT_CRN  =  ibm_certificate_manager_import.server_cert.id
+             CLIENT_CERT_CRN  =  ibm_certificate_manager_import.client_cert.id
+             VPNCLIENT_IP  =  var.vpnclient_ip
+             CLIENT_DNS  =  var.client_dns
+             AUTH_METHOD =  var.auth_method
+             SECGRP_ID  =  ibm_is_security_group.vpn_security_group.id
+             VPN_PROTO  = var.vpn_server_proto
+             VPN_PORT   = var.vpn_server_port
+             SPLIT_TUNNEL = var.enable_split_tunnel
+             IDLE_TIMEOUT  = var.vpn_client_timeout
+
+        }      
+    }     
+
+    # Delete on_destroy
+    #  provisioner "local-exec" {
+    #     when        = "destroy"                                                        
+    #     command = "${path.module}/scripts/delete-vpn.sh"
+
+    #     environment = {                                                                                   
+    #          IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
+    #          REGION  =  var.region
+    #          RESOURCE_GROUP  =  var.resource_group_name
+    #          VPN_SERVER  =  local.name
+    #     }  
+    #  }
+}
+
+
+# Download the client profile
+# Open the profile in an editor and add the client certificate and key at the bottom of the file in <cert></cert> and <key></key>
+
+
