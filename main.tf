@@ -2,12 +2,13 @@
 locals {
   prefix_name     = var.name_prefix != "" ? var.name_prefix : var.resource_group_name
   name            = lower(replace("${local.prefix_name}-vpn-${var.resource_label}", "_", "-"))
+  vpn_profile     = "${path.root}/${local.name}.ovpn"
 }
 
+module "clis" {
+  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
+}
 
-#dependencies:
-# - certificate manager instance already created
-# - service auth already created
 
 
 data "ibm_resource_group" "resource_group" {
@@ -22,20 +23,18 @@ data "ibm_resource_instance" "cm" {
     name     = var.certificate_manager_instance_name
     location = var.region
     service  = "cloudcerts"
+    resource_group_id = data.ibm_resource_group.resource_group.id
 }
 
 
 # Generate the Server and Client certificates and import them into the Certificate Manager instance
-# pass in certificate ID.  if empty, create, otherwise use what is passed in
-# need:
-# signing cert
-# server cert (use signing cert)
-# client cert (use signing cert)
-
 resource null_resource create_certificates {                                                          
 
     provisioner "local-exec" {                                                                          
         command = "${path.module}/scripts/create-certificates.sh"
+         environment = {                                        
+             BIN_DIR = module.clis.bin_dir
+         }
 
     }
 }
@@ -44,35 +43,35 @@ data "local_file" "ca" {
    depends_on = [
      null_resource.create_certificates
    ]
-    filename = "${path.module}/certificates/ca.crt"
+    filename = "${path.root}/certificates/ca.crt"
 }
 
 data "local_file" "server_cert" {
    depends_on = [
      null_resource.create_certificates
    ]
-    filename = "${path.module}/certificates/issued/vpn-server.vpn.ibm.com.crt"
+    filename = "${path.root}/certificates/issued/vpn-server.vpn.ibm.com.crt"
 }
 
 data "local_file" "server_key" {
    depends_on = [
      null_resource.create_certificates
    ]
-    filename = "${path.module}/certificates/private/vpn-server.vpn.ibm.com.key"
+    filename = "${path.root}/certificates/private/vpn-server.vpn.ibm.com.key"
 }
 
 data "local_file" "client_cert" {
    depends_on = [
      null_resource.create_certificates
    ]
-    filename = "${path.module}/certificates/issued/client1.vpn.ibm.com.crt"
+    filename = "${path.root}/certificates/issued/client1.vpn.ibm.com.crt"
 }
 
 data "local_file" "client_key" {
    depends_on = [
      null_resource.create_certificates
    ]
-    filename = "${path.module}/certificates/private/client1.vpn.ibm.com.key"
+    filename = "${path.root}/certificates/private/client1.vpn.ibm.com.key"
 }
 
 
@@ -98,20 +97,6 @@ resource "ibm_certificate_manager_import" "client_cert" {
   }
 }
 
-# data "ibm_certificate_manager_certificate" "server_certificate" {
-#     depends_on = [
-#       ibm_certificate_manager_import.server_cert
-#     ]
-#     certificate_manager_instance_id=data.ibm_resource_instance.cm.id
-#     name = ibm_certificate_manager_import.server_cert.name
-# }
-
-
-
-
-
-
-
 
 
 # Update the subnet Access Control List that will be used for the VPN server
@@ -124,13 +109,13 @@ resource null_resource update_rules {
              SUBNET_ID = var.subnet_id
              REGION = var.region
              RESOURCE_GROUP = data.ibm_resource_group.resource_group.id
+             BIN_DIR = module.clis.bin_dir
          }
      }
  }
 
 
 # Create a Security Group for the VPN Server
-
 resource ibm_is_security_group vpn_security_group {
   name           = "${local.name}-group"
   vpc            = var.vpc_id
@@ -166,6 +151,13 @@ resource null_resource vpn_server {
       null_resource.update_rules
     ]                                                    
 
+    triggers = {                                                                              
+        IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
+        REGION  =  var.region
+        RESOURCE_GROUP  =  var.resource_group_name
+        VPN_SERVER = local.name
+    }
+
     provisioner "local-exec" {                                                                          
         command = "${path.module}/scripts/create-vpn.sh"
                                                                                                      
@@ -185,26 +177,41 @@ resource null_resource vpn_server {
              VPN_PORT   = var.vpn_server_port
              SPLIT_TUNNEL = var.enable_split_tunnel
              IDLE_TIMEOUT  = var.vpn_client_timeout
-
+             BIN_DIR = module.clis.bin_dir
         }      
     }     
 
     # Delete on_destroy
-    #  provisioner "local-exec" {
-    #     when        = "destroy"                                                        
-    #     command = "${path.module}/scripts/delete-vpn.sh"
+    provisioner "local-exec" {
+        when    = destroy                                                        
+        command = "${path.module}/scripts/delete-vpn.sh"
 
-    #     environment = {                                                                                   
-    #          IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
-    #          REGION  =  var.region
-    #          RESOURCE_GROUP  =  var.resource_group_name
-    #          VPN_SERVER  =  local.name
-    #     }  
-    #  }
+        environment = {                                                                                   
+             IBMCLOUD_API_KEY = self.triggers.IBMCLOUD_API_KEY                                                         
+             REGION  =  self.triggers.REGION
+             RESOURCE_GROUP  =  self.triggers.RESOURCE_GROUP
+             VPN_SERVER  =  self.triggers.VPN_SERVER
+        }  
+    }
 }
 
 
-# Download the client profile
-# Open the profile in an editor and add the client certificate and key at the bottom of the file in <cert></cert> and <key></key>
+# Download the client profile & inject certificates
+resource null_resource client_profile {   
+    depends_on = [
+      null_resource.vpn_server
+    ]                                                       
 
+    provisioner "local-exec" {                                                                          
+        command = "${path.module}/scripts/generate-profile.sh"
+         environment = {                                        
+             BIN_DIR = module.clis.bin_dir                                                          
+             IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
+             REGION  =  var.region
+             RESOURCE_GROUP  =  var.resource_group_name
+             VPN_SERVER = local.name
+         }
+
+    }
+}
 

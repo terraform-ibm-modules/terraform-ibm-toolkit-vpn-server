@@ -15,27 +15,6 @@ variable "region" {
   description = "Region for VLANs defined in private_vlan_number and public_vlan_number."
 }
 
-variable "namespace" {
-  type        = string
-  description = "Namespace for tools"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "The name of the cluster"
-  default     = ""
-}
-
-variable "cluster_type" {
-  type        = string
-  description = "The type of cluster that should be created (openshift or kubernetes)"
-}
-
-variable "cluster_exists" {
-  type        = string
-  description = "Flag indicating if the cluster already exists (true or false)"
-  default     = "true"
-}
 
 variable "name_prefix" {
   type        = string
@@ -43,8 +22,8 @@ variable "name_prefix" {
   default     = ""
 }
 
-variable "vpc_cluster" {
-  type        = bool
-  description = "Flag indicating that this is a vpc cluster"
-  default     = false
+variable "certificate_manager_instance_name" {
+  type        = string
+  description = "The certificate manager instance name."
+  default     = "cert-manager-client2site"
 }

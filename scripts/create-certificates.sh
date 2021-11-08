@@ -1,4 +1,4 @@
-
+PATH=$BIN_DIR:$PATH
 
 echo "Cloning easy-rsa"
 rm -rf easy-rsa

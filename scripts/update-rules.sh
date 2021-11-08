@@ -1,4 +1,4 @@
-
+PATH=$BIN_DIR:$PATH
 
 ibmcloud config --check-version=false
 
@@ -16,10 +16,10 @@ EGRESS_RULE_ID=$(echo $RULES | jq -r '.rules[] | select(.name=="allow-vpn-egress
 # only create rules if they don't already exist
 if [ -z "$INGRESS_RULE_ID" ]
 then
- ibmcloud is network-acl-rule-add "${ACL_ID}" allow inbound all 0.0.0.0/8 10.0.0.0/8 --name allow-vpn-ingress
+ ibmcloud is network-acl-rule-add "${ACL_ID}" allow inbound all 0.0.0.0/0 10.0.0.0/8 --name allow-vpn-ingress
 fi
 
 if [ -z "$EGRESS_RULE_ID" ]
 then
-  ibmcloud is network-acl-rule-add "${ACL_ID}" allow outbound all 0.0.0.0/8 10.0.0.0/8 --name allow-vpn-egress
+  ibmcloud is network-acl-rule-add "${ACL_ID}" allow outbound all 10.0.0.0/8 0.0.0.0/0 --name allow-vpn-egress
 fi

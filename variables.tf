@@ -13,10 +13,6 @@ variable "resource_label" {
   description = "The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name."
 }
 
-# variable "resource_group_id" {
-#   type        = string
-#   description = "The id of the IBM Cloud resource group where the resources will be provisioned."
-# }
 
 variable "resource_group_name" {
   type        = string
@@ -42,31 +38,11 @@ variable "subnet_id" {
 
 
 
-
-
-
-
-
-
 variable "name_prefix" {
   type        = string
-  description = "The name of the vpc resource"
+  description = "The name of the vpn resource"
   default     = ""
 }
-
-
-# variable "vpn_server_name" {
-#   type        = string
-#   description = "The IBM Cloud VPN Server name."
-#   default  =  "testvpn22"
-# }
-
-# variable "vpc_id" {
-#   type        = string
-#   description = "The id of the vpc instance"
-#   default  =  "r014-26df69c9-e749-478a-b7ac-cb4e67fa89b3"
-# }
-
 
 
 
@@ -79,8 +55,8 @@ variable "vpnclient_ip" {
 
 variable "client_dns" {
   type        = string
-  description = "DNS for VPN Client"
-  default  =  "161.26.0.7"
+  description = "Comma-separated DNS IPs for VPN Client Use '161.26.0.10,161.26.0.11' for public endpoints, or '161.26.0.7,161.26.0.8' for private endpoints"
+  default  =  "161.26.0.7,161.26.0.8"
 }
 
 variable "auth_method" {
@@ -88,12 +64,6 @@ variable "auth_method" {
   description = "VPN Client Auth Method"
   default  =  "certificate"
 }
-
-# variable "secgrp_id" {
-#   type        = string
-#   description = "Security Group ID for VPN Server"
-#   default  =  "r014-5f7b0a7e-de12-49cb-8d5d-4e5b9c133bd2"
-# }
 
 variable "vpn_server_proto" {
   type        = string
@@ -116,32 +86,6 @@ variable "vpn_client_timeout" {
 
 variable "enable_split_tunnel" {
   type        = string
-  description = "VPN server Tunnel Type"
+  description = "VPN server Tunnel Type (true|false)"
   default  =  "true"
 }
-
-
-# variable "sync" {                                                                                                               
-#   type        = string                                                                                                          
-#   description = "Value used to synchronize dependencies between modules"                                                        
-#   default     = ""                                                                                                              
-# }      
-
-# variable "vpn_server_id" {
-#   type        = string
-#   description = "Value used to synchronize dependencies between modules"
-#   default     = ""
-# }
-
-
-# variable "vpn_route_name" {
-#   type        = string
-#   description = "Value used to synchronize dependencies between modules"
-#   default     = ""
-# }
-
-# variable "route_cidr" {
-#   type        = string
-#   description = "Value used to synchronize dependencies between modules"
-#   default     = ""
-# }

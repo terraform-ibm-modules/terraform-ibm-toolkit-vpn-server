@@ -9,3 +9,12 @@ output.yaml
 
 *.tfstate
 *.tfstate.backup
+
+test/stages/module
+
+test/stages/bin2
+test/stages/certificates
+test/stages/easy-rsa
+test/stages/*.ovpn
+
+module
