@@ -27,3 +27,9 @@ variable "certificate_manager_instance_name" {
   description = "The certificate manager instance name."
   default     = "cert-manager-client2site"
 }
+
+
+
+variable "hpcs_resource_group_name" {
+  type        = string
+}
