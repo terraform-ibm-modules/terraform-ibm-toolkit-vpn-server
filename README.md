@@ -1,59 +1,52 @@
-# Starter kit for a Terraform module
+# Client 2 Site VPN
 
-This is a Starter kit to help with the creation of Terraform modules. The basic structure of a Terraform module is fairly
-simple and consists of the following basic values:
+This is a terraform module that will provision a client-to-site VPN on IBM Cloud.  _Note: This is a beta offering that is not supported by the IBM cloud Terraform provider yet, so it is implemented using a `local-exec` provisioner with a bash script to handle resource creation and configuration.
 
-- README.md - provides a description of the module
-- main.tf - defiens the logic for the module
-- variables.tf (optional) - defines the input variables for the module
-- outputs.tf (optional) - defines the values that are output from the module
+This module will: 
 
-Beyond those files, any other content can be added and organized however you see fit. For example, you can add a `scripts/` directory
-that contains shell scripts executed by a `local-exec` `null_resource` in the terraform module. The contents will depend on what your
-module does and how it does it.
-
-## Instructions for creating a new module
-
-1. Update the title and description in the README to match the module you are creating
-2. Fill out the remaining sections in the README template as appropriate
-3. Implement your logic in the in the main.tf, variables.tf, and outputs.tf
-4. Use releases/tags to manage release versions of your module
+- Download necessary CLI dependencies (`jq`)
+- Create a server and a client certificate and import them into a certificate manager instance
+- Update the ACL for the VPC subnet to allow for VPN ingress & egress
+- Create a security group and security group rules for the VPN server instance
+- Provision a VPN server
+- Download a VPNC Client profile and inject the client certificate so it is ready for use with an OpenVPN client
 
 ## Software dependencies
 
-The module depends on the following software components:
+Dependencies:
+- [CLIs](https://github.com/cloud-native-toolkit/terraform-util-clis)
+- [Resource Group](https://github.com/cloud-native-toolkit/terraform-ibm-resource-group)
+- [Certificate Manager](https://github.com/cloud-native-toolkit/terraform-ibm-cert-manager)
+- [VPC](https://github.com/cloud-native-toolkit/terraform-ibm-vpc)
+- [VPC Gateway](https://github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways)
+- [VPC Subnet](https://github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets)
 
 ### Command-line tools
 
-- terraform - v12
-- kubectl
+- `terraform` - v14
+- `jq`
+- `ibmcloud`
 
 ### Terraform providers
 
-- IBM Cloud provider >= 1.5.3
-- Helm provider >= 1.1.1 (provided by Terraform)
-
-## Module dependencies
-
-This module makes use of the output from other modules:
-
-- Cluster - github.com/ibm-garage-cloud/terraform-ibm-container-platform.git
-- Namespace - github.com/ibm-garage-clout/terraform-cluster-namespace.git
-- etc
+- IBM Cloud provider >= 1.35.0
 
 ## Example usage
 
 ```hcl-terraform
-module "dev_tools_argocd" {
-  source = "github.com/ibm-garage-cloud/terraform-tools-argocd.git?ref=v1.0.0"
+module "vpn_module" {
+  source = "./module"
 
-  cluster_config_file = module.dev_cluster.config_file_path
-  cluster_type        = module.dev_cluster.type
-  app_namespace       = module.dev_cluster_namespaces.tools_namespace_name
-  ingress_subdomain   = module.dev_cluster.ingress_hostname
-  olm_namespace       = module.dev_software_olm.olm_namespace
-  operator_namespace  = module.dev_software_olm.target_namespace
-  name                = "argocd"
+  resource_group_name = module.resource_group.name
+  region = var.region
+  ibmcloud_api_key = var.ibmcloud_api_key
+  resource_label = "client2site"
+  certificate_manager_instance_name = module.cert-manager.name
+  vpc_id = module.vpc.id
+  subnet_id = module.subnets.ids[0]
+  depends_on = [
+    module.cert-manager.name
+  ]
 }
 ```
 
