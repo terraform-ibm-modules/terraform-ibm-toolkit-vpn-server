@@ -1,7 +1,6 @@
 module "vpn_module" {
   source = "./module"
 
-  name_prefix="amt2"
   resource_group_name = module.resource_group.name
   region = var.region
   ibmcloud_api_key = var.ibmcloud_api_key
