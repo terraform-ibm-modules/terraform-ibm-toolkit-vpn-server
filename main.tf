@@ -32,6 +32,7 @@ resource null_resource create_certificates {
 
     provisioner "local-exec" {                                                                          
         command = "${path.module}/scripts/create-certificates.sh"
+        working_dir = path.root
          environment = {                                        
              BIN_DIR = module.clis.bin_dir
          }
@@ -160,6 +161,7 @@ resource null_resource vpn_server {
 
     provisioner "local-exec" {                                                                          
         command = "${path.module}/scripts/create-vpn.sh"
+        working_dir = path.root
                                                                                                      
         environment = {                                                                                   
              IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
@@ -204,7 +206,8 @@ resource null_resource client_profile {
 
     provisioner "local-exec" {                                                                          
         command = "${path.module}/scripts/generate-profile.sh"
-         environment = {                                        
+        working_dir = path.root
+        environment = {                                        
              BIN_DIR = module.clis.bin_dir                                                          
              IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
              REGION  =  var.region

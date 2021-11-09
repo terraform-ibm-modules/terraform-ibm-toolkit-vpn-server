@@ -36,13 +36,13 @@ sed -i '' '/#cert client_public_key.crt/a\
 </cert>\
  ' $VPN_SERVER.ovpn
 
-sed -i '' '/<cert>/r certificates/issued/client1.vpn.ibm.com.crt' $VPN_SERVER.ovpn
+sed -i '' '/<cert>/r ./certificates/issued/client1.vpn.ibm.com.crt' $VPN_SERVER.ovpn
 
 sed -i '' '/#key client_private_key.key/a\
 <key>\
 </key>\
  ' $VPN_SERVER.ovpn
 
-sed -i '' '/<key>/r certificates/private/client1.vpn.ibm.com.key' $VPN_SERVER.ovpn
+sed -i '' '/<key>/r ./certificates/private/client1.vpn.ibm.com.key' $VPN_SERVER.ovpn
 
 echo "Your OpenVPN client profile has been created, with certificates added, and is available at $(pwd)/$VPN_SERVER.ovpn"
