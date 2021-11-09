@@ -30,6 +30,14 @@ ibmcloud is vpn-server-client-configuration $VPN_SERVER --file $VPN_SERVER.ovpn
 
 echo "Inserting client certificate into vpn profile"
 
+if [[ ! -f ./certificates/issued/client1.vpn.ibm.com.crt ]] ; then
+    echo './certificates/issued/client1.vpn.ibm.com.crt not found'
+    exit 1
+fi
+if [[ ! -f ./certificates/private/client1.vpn.ibm.com.key ]] ; then
+    echo './certificates/private/client1.vpn.ibm.com.key not found'
+    exit 1
+fi
 
 sed -i '' '/#cert client_public_key.crt/a\
 <cert>\
