@@ -9,44 +9,41 @@ versions:
     - kubernetes
     - ocp3
     - ocp4
-  dependencies: []
-#    - id: cluster
-#      refs:
-#        - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-#          version: ">= 1.7.0"
-#        - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-#          version: ">= 2.0.0"
-#    - id: namespace
-#      refs:
-#        - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-#          version: ">= 2.1.0"
-#    - id: dashboard
-#      refs:
-#        - source: github.com/ibm-garage-cloud/terraform-k8s-dashboard
-#          version: ">= 1.6.0"
-  variables: []
-#    - name: cluster_type
-#      moduleRef:
-#        id: cluster
-#        output: type_code
-#    - name: cluster_ingress_hostname
-#      moduleRef:
-#        id: cluster
-#        output: ingress_hostname
-#    - name: cluster_config_file
-#      moduleRef:
-#        id: cluster
-#        output: config_file_path
-#    - name: tls_secret_name
-#      moduleRef:
-#        id: cluster
-#        output: tls_secret_name
-#    - name: releases_namespace
-#      moduleRef:
-#        id: namespace
-#        output: name
-#        discriminator: tools
-#    - name: icon_url
-#      moduleRef:
-#        id: dashboard
-#        output: base_icon_url
+  dependencies: 
+    - id: resource_group
+      refs:
+        - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
+          version: ">= 3.0.1"
+    - id: vpc
+      refs:
+        - source: github.com/cloud-native-toolkit/terraform-ibm-vpc
+          version: ">= 1.13.0"
+    - id: gateways
+      refs:
+        - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways
+          version: ">= 1.6.0"
+    - id: subnets
+      refs:
+        - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
+          version: ">= 1.9.0"
+    - id: cert-manager
+      refs:
+        - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
+          version: ">= 1.1.0"
+  variables: 
+    - name: resource_group_name
+      moduleRef:
+        id: resource_group
+        output: name
+    - name: certificate_manager_instance_name
+      moduleRef:
+        id: cert-manager
+        output: name
+    - name: vpc_id
+      moduleRef:
+        id: vpc
+        output: id
+    - name: subnet_id
+      moduleRef:
+        id: subnets
+        output: ids[0]
