@@ -1,12 +1,4 @@
 
-
-resource null_resource update_vpc_infrastructure  {                                                      
-
-    provisioner "local-exec" {                                                                          
-        command = "ibmcloud plugin update vpc-infrastructure -f"
-    }
-}
-
 module "vpn_module" { 
   source = "./module"
 
@@ -15,9 +7,6 @@ module "vpn_module" {
   ibmcloud_api_key = var.ibmcloud_api_key
   resource_label = "client2site"
   certificate_manager_id = module.cert-manager.id
+  vpc_id     = module.subnets.vpc_id
   subnet_ids = module.subnets.ids
-  depends_on = [
-    module.cert-manager.name,
-    null_resource.update_vpc_infrastructure
-  ]
 }

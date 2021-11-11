@@ -17,19 +17,17 @@ Dependencies:
 - [CLIs](https://github.com/cloud-native-toolkit/terraform-util-clis)
 - [Resource Group](https://github.com/cloud-native-toolkit/terraform-ibm-resource-group)
 - [Certificate Manager](https://github.com/cloud-native-toolkit/terraform-ibm-cert-manager)
-- [VPC](https://github.com/cloud-native-toolkit/terraform-ibm-vpc)
-- [VPC Gateway](https://github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways)
 - [VPC Subnet](https://github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets)
 
 ### Command-line tools
 
-- `terraform` - v14
+- `terraform` - v0.15
 - `jq`
 - `ibmcloud`
 
 ### Terraform providers
 
-- IBM Cloud provider >= 1.35.0
+None
 
 ## Example usage
 
@@ -41,12 +39,9 @@ module "vpn_module" {
   region = var.region
   ibmcloud_api_key = var.ibmcloud_api_key
   resource_label = "client2site"
-  certificate_manager_instance_name = module.cert-manager.name
-  vpc_id = module.vpc.id
-  subnet_id = module.subnets.ids[0]
-  depends_on = [
-    module.cert-manager.name
-  ]
+  certificate_manager_id = module.cert-manager.id
+  vpn_id     = module.subnets.vpc_id
+  subnet_ids = module.subnets.ids
 }
 ```
 

@@ -1,27 +1,20 @@
-name: ""
+name: ibm-vpn-server
 type: terraform
-description: ""
+description: Module to provision a client to site VPN server instance in an IBM Cloud account
 tags:
-    - tools
-    - devops
+    - vpc
+    - vpn server
+    - client to site
 versions:
-- platforms:
-    - kubernetes
-    - ocp3
-    - ocp4
-  dependencies: 
+- platforms: []
+  providers:
+    - name: ibm
+      source: "ibm-cloud/ibm"
+  dependencies:
     - id: resource_group
       refs:
         - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
           version: ">= 3.0.1"
-    - id: vpc
-      refs:
-        - source: github.com/cloud-native-toolkit/terraform-ibm-vpc
-          version: ">= 1.13.0"
-    - id: gateways
-      refs:
-        - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways
-          version: ">= 1.6.0"
     - id: subnets
       refs:
         - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
@@ -39,6 +32,10 @@ versions:
       moduleRef:
         id: cert-manager
         output: id
+    - name: vpc_id
+      moduleRef:
+        id: subnets
+        output: vpc_id
     - name: subnet_ids
       moduleRef:
         id: subnets

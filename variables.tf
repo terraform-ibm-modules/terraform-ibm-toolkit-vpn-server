@@ -11,6 +11,7 @@ variable "region" {
 variable "resource_label" {                   
   type        = string                        
   description = "The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name."
+  default     = "vpn"
 }
 
 variable "resource_group_name" {
@@ -21,6 +22,11 @@ variable "resource_group_name" {
 variable "certificate_manager_id" {
   type        = string
   description = "The certificate manager instance id."
+}
+
+variable "vpc_id" {
+  type        = string
+  description = "The id of the vpc instance."
 }
 
 variable "subnet_ids" {
@@ -37,41 +43,41 @@ variable "name_prefix" {
 variable "vpnclient_ip" {
   type        = string
   description = "VPN Client IP Range"
-  default = "172.16.0.0/16"
+  default     = "172.16.0.0/16"
 }
 
 variable "client_dns" {
-  type        = string
-  description = "Comma-separated DNS IPs for VPN Client Use '161.26.0.10,161.26.0.11' for public endpoints, or '161.26.0.7,161.26.0.8' for private endpoints"
-  default  =  "161.26.0.7,161.26.0.8"
+  type        = list(string)
+  description = "Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints"
+  default     =  ["161.26.0.7","161.26.0.8"]
 }
 
 variable "auth_method" {
   type        = string
-  description = "VPN Client Auth Method"
-  default  =  "certificate"
+  description = "VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate"
+  default     =  "certificate"
 }
 
 variable "vpn_server_proto" {
   type        = string
-  description = "VPN Server Protocol"
-  default  =  "udp"
+  description = "VPN Server Protocol. One of: udp or tcp"
+  default     = "udp"
 }
 
 variable "vpn_server_port" {
   type        = number
   description = "VPN Server Port number"
-  default  =  "443"
+  default     = 443
 }
 
 variable "vpn_client_timeout" {
   type        = number
   description = "VPN Server Client Time out"
-  default  =  "600"
+  default     =  600
 }
 
 variable "enable_split_tunnel" {
-  type        = string
-  description = "VPN server Tunnel Type (true|false)"
-  default  =  "true"
+  type        = bool
+  description = "VPN server Tunnel Type"
+  default     = true
 }

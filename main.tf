@@ -9,14 +9,15 @@ module "clis" {
   source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
 }
 
-
+resource null_resource update_vpc_infrastructure  {
+  provisioner "local-exec" {
+    command = "ibmcloud plugin update vpc-infrastructure -f"
+  }
+}
 
 data "ibm_resource_group" "resource_group" {
   name = var.resource_group_name
 }
-
-
-
 
 # Generate the Server and Client certificates and import them into the Certificate Manager instance
 resource null_resource create_certificates {                                                          
@@ -66,7 +67,6 @@ data "local_file" "client_key" {
     filename = "${path.root}/certificates/private/client1.vpn.ibm.com.key"
 }
 
-
 resource "ibm_certificate_manager_import" "server_cert" {
   certificate_manager_instance_id = var.certificate_manager_id
   name                            = "vpn-server-cert"
@@ -89,36 +89,26 @@ resource "ibm_certificate_manager_import" "client_cert" {
   }
 }
 
-
-
 # Update the subnet Access Control List that will be used for the VPN server
+resource null_resource update_rules {
+  depends_on = [null_resource.update_vpc_infrastructure]
 
-resource null_resource update_rules {                                                          
-     provisioner "local-exec" {                                                                          
-         command = "${path.module}/scripts/update-rules.sh"
-         environment = {                                                                                   
-             IBMCLOUD_API_KEY = var.ibmcloud_api_key                                             
-             SUBNET_ID = var.subnet_ids[0]
-             REGION = var.region
-             RESOURCE_GROUP = data.ibm_resource_group.resource_group.id
-             BIN_DIR = module.clis.bin_dir
-         }
-     }
+   provisioner "local-exec" {
+       command = "${path.module}/scripts/update-rules.sh"
+       environment = {
+           IBMCLOUD_API_KEY = var.ibmcloud_api_key
+           SUBNET_ID = var.subnet_ids[0]
+           REGION = var.region
+           RESOURCE_GROUP = data.ibm_resource_group.resource_group.id
+           BIN_DIR = module.clis.bin_dir
+       }
+   }
  }
-
-
-# lookup vpc id from subnet id (this is not possible through the terraform ibm_is_subnets data source)
-data "external" "vpc" {
-  program = ["bash", "get-vpc.sh", "${module.clis.bin_dir}", "${var.region}", "${var.resource_group_name}", "${var.ibmcloud_api_key}", "${var.subnet_ids[0]}"]
-  working_dir = "${path.module}/scripts"
-}
-
-
 
 # Create a Security Group for the VPN Server
 resource ibm_is_security_group vpn_security_group {
   name           = "${local.name}-group"
-  vpc            = data.external.vpc.result.id
+  vpc            = var.vpc_id
   resource_group = data.ibm_resource_group.resource_group.id
 }
 
@@ -135,15 +125,10 @@ resource "ibm_is_security_group_rule" "outbound" {
 }
 
 
-
-
-
-
-
-
 # Provision the VPN Server instance & create the VPN Server Routes 
 resource null_resource vpn_server {      
     depends_on = [
+      null_resource.update_vpc_infrastructure,
       ibm_certificate_manager_import.server_cert,
       ibm_is_security_group.vpn_security_group,
       ibm_is_security_group_rule.inbound,
@@ -171,7 +156,7 @@ resource null_resource vpn_server {
              SERVER_CERT_CRN  =  ibm_certificate_manager_import.server_cert.id
              CLIENT_CERT_CRN  =  ibm_certificate_manager_import.client_cert.id
              VPNCLIENT_IP  =  var.vpnclient_ip
-             CLIENT_DNS  =  var.client_dns
+             CLIENT_DNS  =  join(",", var.client_dns)
              AUTH_METHOD =  var.auth_method
              SECGRP_ID  =  ibm_is_security_group.vpn_security_group.id
              VPN_PROTO  = var.vpn_server_proto
@@ -216,4 +201,3 @@ resource null_resource client_profile {
 
     }
 }
-
