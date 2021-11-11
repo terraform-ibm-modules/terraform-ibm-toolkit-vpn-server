@@ -8,11 +8,10 @@ module "cert-manager" {
 
   resource_group_name = module.resource_group.name
   region = var.region
-  name = var.certificate_manager_instance_name
   private_endpoint = false
 }
 
-# module "flow_log_auth" {
+# module "service_auth" {
 #   source = "github.com/cloud-native-toolkit/terraform-ibm-iam-service-authorization"
 
 #   source_service_name = "is"

@@ -35,15 +35,11 @@ versions:
       moduleRef:
         id: resource_group
         output: name
-    - name: certificate_manager_instance_name
+    - name: certificate_manager_id
       moduleRef:
         id: cert-manager
-        output: name
-    - name: vpc_id
-      moduleRef:
-        id: vpc
         output: id
-    - name: subnet_id
+    - name: subnet_ids
       moduleRef:
         id: subnets
-        output: ids[0]
+        output: ids

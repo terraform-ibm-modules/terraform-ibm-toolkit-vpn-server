@@ -53,12 +53,13 @@ fi
 pwd
 mkdir ../../certificates
 mv pki/* ../../certificates
-cd ../../certificates
-echo "ca: \"$(pwd)/ca.crt\"" > output.yaml
-echo "server-cert: \"$(pwd)/issued/vpn-server.vpn.ibm.com.crt\"" >> output.yaml
-echo "server-key: \"$(pwd)/private/vpn-server.vpn.ibm.com.key\"" >> output.yaml
-echo "client-cert: \"$(pwd)/issued/client1.vpn.ibm.com.crt\"" >> output.yaml
-echo "client-key: \"$(pwd)/private/client1.vpn.ibm.com.key\"" >> output.yaml
+cd ../..
+echo "vpn:" > output.yaml
+echo "  ca: \"$(pwd)/ca.crt\"" >> output.yaml
+echo "  server-cert: \"$(pwd)/issued/vpn-server.vpn.ibm.com.crt\"" >> output.yaml
+echo "  server-key: \"$(pwd)/private/vpn-server.vpn.ibm.com.key\"" >> output.yaml
+echo "  client-cert: \"$(pwd)/issued/client1.vpn.ibm.com.crt\"" >> output.yaml
+echo "  client-key: \"$(pwd)/private/client1.vpn.ibm.com.key\"" >> output.yaml
 
 echo "Complete:"
 cat output.yaml

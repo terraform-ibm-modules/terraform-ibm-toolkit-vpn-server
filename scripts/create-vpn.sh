@@ -6,7 +6,7 @@ ibmcloud login -r "${REGION}" -g "${RESOURCE_GROUP}" --apikey "${IBMCLOUD_API_KE
 
 echo "ibmcloud is vpn-server-create  \
   --name \"${VPN_SERVER}\"  \
-  --subnet \"${SUBNET_ID}\"  \
+  --subnet \"${SUBNET_IDS}\"  \
   --cert \"${SERVER_CERT_CRN}\"  \
   --client-ca \"${CLIENT_CERT_CRN}\"  \
   --client-ip-pool \"${VPNCLIENT_IP}\"  \
@@ -20,7 +20,7 @@ echo "ibmcloud is vpn-server-create  \
 
 ibmcloud is vpn-server-create  \
   --name "${VPN_SERVER}"  \
-  --subnet "${SUBNET_ID}"  \
+  --subnet "${SUBNET_IDS}"  \
   --cert "${SERVER_CERT_CRN}"  \
   --client-ca "${CLIENT_CERT_CRN}"  \
   --client-ip-pool "${VPNCLIENT_IP}"  \
@@ -35,8 +35,8 @@ ibmcloud is vpn-server-create  \
 VPN=$(ibmcloud is vpn-server $VPN_SERVER --output json)
 VPN_SERVER_ID=$(echo $VPN | jq -r ".id")
 
-echo "vpn_server: \"${VPN_SERVER}\"" >> output.yaml
-echo "vpn_server_id: \"${VPN_SERVER_ID}\"" >> output.yaml
+echo "  vpn_server: \"${VPN_SERVER}\"" >> output.yaml
+echo "  vpn_server_id: \"${VPN_SERVER_ID}\"" >> output.yaml
 
 
 ibmcloud is vpn-server-route-create $VPN_SERVER --name vpc-network --action translate --destination 10.0.0.0/8

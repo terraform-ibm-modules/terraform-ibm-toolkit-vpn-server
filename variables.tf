@@ -13,39 +13,26 @@ variable "resource_label" {
   description = "The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name."
 }
 
-
 variable "resource_group_name" {
   type        = string
   description = "The name of the IBM Cloud resource group where the resources will be provisioned."
 }
 
-
-variable "certificate_manager_instance_name" {
+variable "certificate_manager_id" {
   type        = string
-  description = "The certificate manager instance name."
+  description = "The certificate manager instance id."
 }
 
-
-variable "vpc_id" {
-  type        = string
-  description = "The id for the VPC that the VPN will be connected to."
+variable "subnet_ids" {
+  type        = list(string)
+  description = "The array of ids (strings) for the subnet that the VPN will be connected to."
 }
-
-variable "subnet_id" {
-  type        = string
-  description = "The id for the subnet that the VPN will be connected to."
-}
-
-
 
 variable "name_prefix" {
   type        = string
   description = "The name of the vpn resource"
   default     = ""
 }
-
-
-
 
 variable "vpnclient_ip" {
   type        = string
@@ -82,7 +69,6 @@ variable "vpn_client_timeout" {
   description = "VPN Server Client Time out"
   default  =  "600"
 }
-
 
 variable "enable_split_tunnel" {
   type        = string

@@ -14,9 +14,8 @@ module "vpn_module" {
   region = var.region
   ibmcloud_api_key = var.ibmcloud_api_key
   resource_label = "client2site"
-  certificate_manager_instance_name = module.cert-manager.name
-  vpc_id = module.vpc.id
-  subnet_id = module.subnets.ids[0]
+  certificate_manager_id = module.cert-manager.id
+  subnet_ids = module.subnets.ids
   depends_on = [
     module.cert-manager.name,
     null_resource.update_vpc_infrastructure
