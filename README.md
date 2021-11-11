@@ -40,7 +40,7 @@ module "vpn_module" {
   ibmcloud_api_key = var.ibmcloud_api_key
   resource_label = "client2site"
   certificate_manager_id = module.cert-manager.id
-  vpn_id     = module.subnets.vpc_id
+  vpc_id     = module.subnets.vpc_id
   subnet_ids = module.subnets.ids
 }
 ```
