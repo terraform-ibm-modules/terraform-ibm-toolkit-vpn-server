@@ -40,3 +40,7 @@ versions:
       moduleRef:
         id: subnets
         output: ids
+    - name: region
+      scope: global
+    - name: ibmcloud_api_key
+      scope: global
