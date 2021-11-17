@@ -15,7 +15,15 @@ resource null_resource update_vpc_infrastructure  {
   }
 }
 
+
+resource null_resource print_resources {
+  provisioner "local-exec" {
+    command = "echo 'Resource group: ${var.resource_group_name}'"
+  }
+}
 data "ibm_resource_group" "resource_group" {
+  depends_on = [null_resource.print_resources]
+
   name = var.resource_group_name
 }
 
