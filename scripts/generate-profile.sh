@@ -39,6 +39,12 @@ if [[ ! -f ./certificates/private/client1.vpn.ibm.com.key ]] ; then
     exit 1
 fi
 
+
+# update the ovpn profile and embed certificates (syntax is different in mac vs linux)
+echo $OSTYPE
+if [[ $OSTYPE == 'darwin'* ]]; then
+
+echo "executing MacOS syntax"
 sed -i '' '/#cert client_public_key.crt/a\
 <cert>\
 </cert>\
@@ -52,5 +58,22 @@ sed -i '' '/#key client_private_key.key/a\
  ' $VPN_SERVER.ovpn
 
 sed -i '' '/<key>/r ./certificates/private/client1.vpn.ibm.com.key' $VPN_SERVER.ovpn
+else 
+
+echo "executing Linux syntax"
+sed -i '/#cert client_public_key.crt/a\
+<cert>\
+</cert>\
+ ' $VPN_SERVER.ovpn
+
+sed -i '/<cert>/r ./certificates/issued/client1.vpn.ibm.com.crt' $VPN_SERVER.ovpn
+
+sed -i '/#key client_private_key.key/a\
+<key>\
+</key>\
+ ' $VPN_SERVER.ovpn
+
+sed -i '/<key>/r ./certificates/private/client1.vpn.ibm.com.key' $VPN_SERVER.ovpn
+fi
 
 echo "Your OpenVPN client profile has been created, with certificates added, and is available at $(pwd)/$VPN_SERVER.ovpn"
