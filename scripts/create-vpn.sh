@@ -40,5 +40,5 @@ echo "  vpn_server_id: \"${VPN_SERVER_ID}\"" >> output.yaml
 
 
 ibmcloud is vpn-server-route-create $VPN_SERVER --name vpc-network --action translate --destination 10.0.0.0/8
-ibmcloud is vpn-server-route-create $VPN_SERVER --name services --action deliver --destination 166.8.0.0/14
+ibmcloud is vpn-server-route-create $VPN_SERVER --name services --action translate --destination 166.8.0.0/14
 ibmcloud is vpn-server-route-create $VPN_SERVER --name dns --action translate --destination 161.26.0.0/16
