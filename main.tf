@@ -145,7 +145,7 @@ resource null_resource vpn_server {
     ]                                                    
 
     triggers = {                                                                              
-        IBMCLOUD_API_KEY = var.ibmcloud_api_key                                                         
+        IBMCLOUD_API_KEY = base64encode(var.ibmcloud_api_key)                                                         
         REGION  =  var.region
         RESOURCE_GROUP  =  var.resource_group_name
         VPN_SERVER = local.name
@@ -181,7 +181,7 @@ resource null_resource vpn_server {
         command = "${path.module}/scripts/delete-vpn.sh"
 
         environment = {                                                                                   
-             IBMCLOUD_API_KEY = self.triggers.IBMCLOUD_API_KEY                                                         
+             IBMCLOUD_API_KEY = base64decode(self.triggers.IBMCLOUD_API_KEY)                                                         
              REGION  =  self.triggers.REGION
              RESOURCE_GROUP  =  self.triggers.RESOURCE_GROUP
              VPN_SERVER  =  self.triggers.VPN_SERVER
