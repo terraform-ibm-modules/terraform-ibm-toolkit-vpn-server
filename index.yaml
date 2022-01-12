@@ -58,7 +58,7 @@ versions:
         type: string
         description: The IBM Cloud api key
       - name: resource_label
-        type: 'string                        '
+        type: string
         description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
         default: vpn
         optional: true
@@ -163,7 +163,7 @@ versions:
         type: string
         description: The IBM Cloud api key
       - name: resource_label
-        type: 'string                        '
+        type: string
         description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
         default: vpn
         optional: true
@@ -268,7 +268,7 @@ versions:
         type: string
         description: The IBM Cloud api key
       - name: resource_label
-        type: 'string                        '
+        type: string
         description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
         default: vpn
         optional: true
