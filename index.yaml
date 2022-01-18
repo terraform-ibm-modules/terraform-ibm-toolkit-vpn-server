@@ -58,6 +58,111 @@ versions:
         type: string
         description: The IBM Cloud api key
       - name: resource_label
+        type: 'string                        '
+        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        default: vpn
+        optional: true
+      - name: name_prefix
+        type: string
+        description: The name of the vpn resource
+        default: ""
+        optional: true
+      - name: vpnclient_ip
+        type: string
+        description: VPN Client IP Range
+        default: 172.16.0.0/16
+        optional: true
+      - name: client_dns
+        type: list(string)
+        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        default: '[161.26.0.7,161.26.0.8]'
+        optional: true
+      - name: auth_method
+        type: string
+        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        default: certificate
+        optional: true
+      - name: vpn_server_proto
+        type: string
+        description: 'VPN Server Protocol. One of: udp or tcp'
+        default: udp
+        optional: true
+      - name: vpn_server_port
+        type: number
+        description: VPN Server Port number
+        default: 443
+        optional: true
+      - name: vpn_client_timeout
+        type: number
+        description: VPN Server Client Time out
+        default: 600
+        optional: true
+      - name: enable_split_tunnel
+        type: bool
+        description: VPN server Tunnel Type
+        default: true
+        optional: true
+    version: v0.0.9
+    outputs:
+      - name: name
+        description: The name of the VPN server instance
+      - name: server_certificate
+        description: The id of the server certificate saved to the certificate manager instance
+      - name: client_certificate
+        description: The id of the client certificate saved to the certificate manager instance
+      - name: vpn_profile
+        description: The id of the VPN server instance
+  - platforms: []
+    providers:
+      - name: ibm
+        source: "ibm-cloud/ibm"
+    dependencies:
+      - id: resource_group
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
+            version: ">= 3.0.1"
+      - id: subnets
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
+            version: ">= 1.9.0"
+      - id: cert-manager
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
+            version: ">= 1.1.0"
+    variables:
+      - name: resource_group_name
+        moduleRef:
+          id: resource_group
+          output: name
+        type: string
+        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+      - name: certificate_manager_id
+        moduleRef:
+          id: cert-manager
+          output: id
+        type: string
+        description: The certificate manager instance id.
+      - name: vpc_id
+        moduleRef:
+          id: subnets
+          output: vpc_id
+        type: string
+        description: The id of the vpc instance.
+      - name: subnet_ids
+        moduleRef:
+          id: subnets
+          output: ids
+        type: list(string)
+        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+      - name: region
+        scope: global
+        type: string
+        description: The IBM Cloud region where the resources will be provisioned.
+      - name: ibmcloud_api_key
+        scope: global
+        type: string
+        description: The IBM Cloud api key
+      - name: resource_label
         type: string
         description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
         default: vpn
@@ -75,7 +180,7 @@ versions:
       - name: client_dns
         type: list(string)
         description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
-        default: ["161.26.0.7","161.26.0.8"]
+        default: ["161.26.0.7", "161.26.0.8"]
         optional: true
       - name: auth_method
         type: string
