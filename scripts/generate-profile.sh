@@ -26,6 +26,8 @@ done
 
 echo "VPN $VPN_SERVER ready"
 
+rm -rf $VPN_SERVER.ovpn
+
 ibmcloud is vpn-server-client-configuration $VPN_SERVER --file $VPN_SERVER.ovpn
 
 echo "Inserting client certificate into vpn profile"
