@@ -51,12 +51,13 @@ then
 fi
 
 pwd
-rm -rf ../../certificates
-mkdir ../../certificates
-mv pki/* ../../certificates
 cd ../..
+rm -rf certificates
+mkdir certificates
+mv easy-rsa/easyrsa3/pki/* certificates
 
-ls -lRa .
+pwd
+ls -lRa certificates
 
 echo "vpn:" > output.yaml
 echo "  ca: \"$(pwd)/certificates/ca.crt\"" >> output.yaml
