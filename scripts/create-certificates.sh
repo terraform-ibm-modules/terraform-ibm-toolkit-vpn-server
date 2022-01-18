@@ -56,8 +56,8 @@ rm -rf certificates
 mkdir certificates
 mv easy-rsa/easyrsa3/pki/* certificates
 
-pwd
-ls -lRa certificates
+# pwd
+# ls -lRa certificates
 
 echo "vpn:" > output.yaml
 echo "  ca: \"$(pwd)/certificates/ca.crt\"" >> output.yaml
@@ -68,3 +68,5 @@ echo "  client-key: \"$(pwd)/certificates/private/client1.vpn.ibm.com.key\"" >> 
 
 echo "Complete:"
 cat output.yaml
+
+rm -rf easy-rsa
