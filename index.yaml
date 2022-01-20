@@ -1,7 +1,9 @@
 id: github.com/cloud-native-toolkit/terraform-ibm-vpn-server
 name: ibm-vpn-server
 type: terraform
-description: Module to provision a client to site VPN server instance in an IBM Cloud account
+description: >-
+  Module to provision a client to site VPN server instance in an IBM Cloud
+  account
 tags:
   - vpc
   - vpn server
@@ -10,27 +12,146 @@ versions:
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
+    variables:
+      - name: ibmcloud_api_key
+        type: string
+        description: The IBM Cloud api key
+        scope: global
+      - name: region
+        type: string
+        description: The IBM Cloud region where the resources will be provisioned.
+        scope: global
+      - name: 'resource_label                   '
+        type: 'string                        '
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
+        default: '"vpn"'
+      - name: resource_group_name
+        type: string
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
+        moduleRef:
+          id: resource_group
+          output: name
+      - name: certificate_manager_id
+        type: string
+        description: The certificate manager instance id.
+        moduleRef:
+          id: cert-manager
+          output: id
+      - name: vpc_id
+        type: string
+        description: The id of the vpc instance.
+        moduleRef:
+          id: subnets
+          output: vpc_id
+      - name: subnet_ids
+        type: list(string)
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
+        moduleRef:
+          id: subnets
+          output: ids
+      - name: name_prefix
+        type: string
+        description: The name of the vpn resource
+        default: ''
+      - name: vpnclient_ip
+        type: string
+        description: VPN Client IP Range
+        default: 172.16.0.0/16
+      - name: client_dns
+        type: list(string)
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
+        default:
+          - 161.26.0.7
+          - 161.26.0.8
+      - name: auth_method
+        type: string
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
+        default: certificate
+      - name: vpn_server_proto
+        type: string
+        description: 'VPN Server Protocol. One of: udp or tcp'
+        default: udp
+      - name: vpn_server_port
+        type: number
+        description: VPN Server Port number
+        default: '443'
+      - name: vpn_client_timeout
+        type: number
+        description: VPN Server Client Time out
+        default: '600'
+      - name: enable_split_tunnel
+        type: bool
+        description: VPN server Tunnel Type
+        default: true
+    version: v0.0.11
+    outputs:
+      - name: name
+        description: The name of the VPN server instance
+        __value: null
+      - name: server_certificate
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
+        __value: null
+      - name: client_certificate
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
+        __value: null
+      - name: vpn_profile
+        description: The id of the VPN server instance
+        __value: null
+  - platforms: []
+    providers:
+      - name: ibm
+        source: ibm-cloud/ibm
+    dependencies:
+      - id: resource_group
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
+            version: '>= 3.0.1'
+      - id: subnets
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
+            version: '>= 1.9.0'
+      - id: cert-manager
+        refs:
+          - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -48,7 +169,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -59,13 +182,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -74,12 +199,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -107,35 +237,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -153,7 +289,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -164,13 +302,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -179,12 +319,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -212,35 +357,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -258,7 +409,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -269,13 +422,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: string
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -284,12 +439,19 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
-        default: ["161.26.0.7", "161.26.0.8"]
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
+        default:
+          - 161.26.0.7
+          - 161.26.0.8
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -317,35 +479,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -363,7 +531,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -374,13 +544,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: string
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -389,12 +561,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -422,35 +599,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -468,7 +651,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -479,13 +664,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: string
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -494,12 +681,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -527,35 +719,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -573,7 +771,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -584,13 +784,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -599,12 +801,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -632,35 +839,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -678,7 +891,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -689,13 +904,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -704,12 +921,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -737,35 +959,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -783,7 +1011,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: region
         scope: global
         type: string
@@ -794,13 +1024,15 @@ versions:
         description: The IBM Cloud api key
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -809,12 +1041,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -842,35 +1079,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -888,7 +1131,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: ibmcloud_api_key
         type: string
         description: The IBM Cloud api key
@@ -897,13 +1142,15 @@ versions:
         description: The IBM Cloud region where the resources will be provisioned.
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -912,12 +1159,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -945,35 +1197,41 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms: []
     providers:
       - name: ibm
-        source: "ibm-cloud/ibm"
+        source: ibm-cloud/ibm
     dependencies:
       - id: resource_group
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-resource-group
-            version: ">= 3.0.1"
+            version: '>= 3.0.1'
       - id: subnets
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
-            version: ">= 1.9.0"
+            version: '>= 1.9.0'
       - id: cert-manager
         refs:
           - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-            version: ">= 1.1.0"
+            version: '>= 1.1.0'
     variables:
       - name: resource_group_name
         moduleRef:
           id: resource_group
           output: name
         type: string
-        description: The name of the IBM Cloud resource group where the resources will be provisioned.
+        description: >-
+          The name of the IBM Cloud resource group where the resources will be
+          provisioned.
       - name: certificate_manager_id
         moduleRef:
           id: cert-manager
@@ -991,7 +1249,9 @@ versions:
           id: subnets
           output: ids
         type: list(string)
-        description: The array of ids (strings) for the subnet that the VPN will be connected to.
+        description: >-
+          The array of ids (strings) for the subnet that the VPN will be
+          connected to.
       - name: ibmcloud_api_key
         type: string
         description: The IBM Cloud api key
@@ -1000,13 +1260,15 @@ versions:
         description: The IBM Cloud region where the resources will be provisioned.
       - name: resource_label
         type: 'string                        '
-        description: The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.
+        description: >-
+          The label for the resource to which the vpe will be connected. Used as
+          a tag and as part of the vpe name.
         default: vpn
         optional: true
       - name: name_prefix
         type: string
         description: The name of the vpn resource
-        default: ""
+        default: ''
         optional: true
       - name: vpnclient_ip
         type: string
@@ -1015,12 +1277,17 @@ versions:
         optional: true
       - name: client_dns
         type: list(string)
-        description: Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints
+        description: >-
+          Comma-separated DNS IPs for VPN Client Use
+          ['161.26.0.10','161.26.0.11'] for public endpoints, or
+          ['161.26.0.7','161.26.0.8'] for private endpoints
         default: '[161.26.0.7,161.26.0.8]'
         optional: true
       - name: auth_method
         type: string
-        description: 'VPN Client Auth Method. One of: certificate, username, certificate,username, username,certificate'
+        description: >-
+          VPN Client Auth Method. One of: certificate, username,
+          certificate,username, username,certificate
         default: certificate
         optional: true
       - name: vpn_server_proto
@@ -1048,9 +1315,13 @@ versions:
       - name: name
         description: The name of the VPN server instance
       - name: server_certificate
-        description: The id of the server certificate saved to the certificate manager instance
+        description: >-
+          The id of the server certificate saved to the certificate manager
+          instance
       - name: client_certificate
-        description: The id of the client certificate saved to the certificate manager instance
+        description: >-
+          The id of the client certificate saved to the certificate manager
+          instance
       - name: vpn_profile
         description: The id of the VPN server instance
   - platforms:
@@ -1058,19 +1329,5 @@ versions:
       - ocp3
       - ocp4
     dependencies: []
-    #    - id: cluster
-    #      refs:
-    #        - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-    #          version: ">= 1.7.0"
-    #        - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-    #          version: ">= 2.0.0"
-    #    - id: namespace
-    #      refs:
-    #        - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-    #          version: ">= 2.1.0"
-    #    - id: dashboard
-    #      refs:
-    #        - source: github.com/ibm-garage-cloud/terraform-k8s-dashboard
-    #          version: ">= 1.6.0"
     variables: []
     version: v0.0.0
