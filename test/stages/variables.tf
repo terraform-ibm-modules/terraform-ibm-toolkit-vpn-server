@@ -21,8 +21,3 @@ variable "name_prefix" {
   description = "Prefix name that should be used for the cluster and services. If not provided then resource_group_name will be used"
   default     = "vpn-test"
 }
-
-
-variable "hpcs_resource_group_name" {
-  type        = string
-}

@@ -1,4 +1,11 @@
-PATH=$BIN_DIR:$PATH
+#!/usr/bin/env bash
+
+export PATH=$BIN_DIR:$PATH
+
+if ! command -v git 1> /dev/null 2> /dev/null; then
+  echo "git cli not found" >&2
+  exit 1
+fi
 
 echo "Cloning easy-rsa"
 rm -rf easy-rsa

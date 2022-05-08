@@ -10,3 +10,8 @@ module "vpn_module" {
   vpc_id     = module.subnets.vpc_id
   subnet_ids = module.subnets.ids
 }
+
+resource local_file vpn_name {
+  filename = ".vpn_name"
+  content = module.vpn_module.name
+}

@@ -1,11 +1,10 @@
-PATH=$BIN_DIR:$PATH
+#!/usr/bin/env bash
 
-
+export PATH="$BIN_DIR:$PATH"
 
 ibmcloud config --check-version=false
 
 ibmcloud login -r "${REGION}" -g "${RESOURCE_GROUP}" --apikey "${IBMCLOUD_API_KEY}" || exit 1
-
 
 VPN_READY=0
 while [ $VPN_READY == 0 ]

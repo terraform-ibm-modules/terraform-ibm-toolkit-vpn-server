@@ -1,4 +1,6 @@
-PATH=$BIN_DIR:$PATH
+#!/usr/bin/env bash
+
+export PATH="$BIN_DIR:$PATH"
 
 ibmcloud config --check-version=false
 
