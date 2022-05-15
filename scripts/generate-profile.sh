@@ -40,18 +40,20 @@ ibmcloud login -r "${REGION}" -g "${RESOURCE_GROUP}" || exit 1
 
 count=0
 vpn_ready=0
-while [[ "${vpn_ready}" -eq 0 ]] && [[ "${count}" -lt 45 ]]; do
+until [[ "${vpn_ready}" -eq 1 ]] || [[ "${count}" -ge 45 ]]; do
     vpn=$(ibmcloud is vpn-server "${VPN_SERVER}" --output json)
     health=$(echo "${vpn}" | jq -r ".health_state")
     lifecycle=$(echo "${vpn}" | jq -r ".lifecycle_state")
 
-    if [[ $HEALTH == "ok" && $LIFECYCLE == "stable" ]]; then
+    if [[ "${health}" == "ok" ]] && [[ "${lifecycle}" == "stable" ]]; then
+      echo "VPN:${VPN_SERVER} is stable. health_state: ${health}, lifecycle_state: ${lifecycle}"
       vpn_ready=1
     elif [[ "${lifecycle}" == "failed" ]]; then
       echo "VPN:${VPN_SERVER} failed to provision. health_state: ${health}, lifecycle_state: ${lifecycle}" >&2
       exit 1
     else
       echo "Waiting for VPN:${VPN_SERVER} to become stable. health_state: ${health}, lifecycle_state: ${lifecycle}"
+      count=$((count + 1))
       sleep 60
     fi
 done
