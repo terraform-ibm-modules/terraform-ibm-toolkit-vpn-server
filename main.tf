@@ -153,7 +153,7 @@ resource null_resource vpn_server {
       REGION  =  var.region
       RESOURCE_GROUP  =  var.resource_group_name
       VPN_SERVER  =  local.name
-      SUBNET_IDS  =  join(",", slice(var.subnet_ids, 0, 2))
+      SUBNET_IDS  =  join(",", slice(var.subnet_ids, 0, min(2,length(var.subnet_ids))))
       SERVER_CERT_CRN  =  ibm_certificate_manager_import.server_cert.id
       CLIENT_CERT_CRN  =  ibm_certificate_manager_import.client_cert.id
       VPNCLIENT_IP  =  var.vpnclient_ip
