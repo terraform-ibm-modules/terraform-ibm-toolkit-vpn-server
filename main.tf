@@ -7,7 +7,6 @@ locals {
 
 module "clis" {
   source = "cloud-native-toolkit/clis/util"
-  version = "1.12.0"
 
   clis = ["ibmcloud-is"]
 }
