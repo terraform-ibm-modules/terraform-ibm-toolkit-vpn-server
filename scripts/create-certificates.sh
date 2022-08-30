@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 export PATH=$BIN_DIR:$PATH
+EASYRSA_PINNED_COMMIT=1600b3f 
 
 if ! command -v git 1> /dev/null 2> /dev/null; then
   echo "git cli not found" >&2
@@ -10,6 +11,7 @@ fi
 echo "Cloning easy-rsa"
 rm -rf easy-rsa
 git clone https://github.com/OpenVPN/easy-rsa.git
+git checkout $EASYRSA_PINNED_COMMIT
 cd easy-rsa/easyrsa3
 #pwd
 #ls -la
