@@ -11,12 +11,13 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    container: quay.io/cloudnativetoolkit/cli-tools:v1.1
+    container: quay.io/cloudnativetoolkit/cli-tools-ibmcloud:latest
 
     strategy:
       matrix:
         testcase:
           - vpc_count
+        #  - ocp4_latest
       fail-fast: false
       max-parallel: 1
 

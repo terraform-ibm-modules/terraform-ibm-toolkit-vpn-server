@@ -31,6 +31,8 @@ None
 
 ## Example usage
 
+[Refer test case for more details](test/stages/stage2-vpn.tf)
+
 ```hcl-terraform
 module "vpn_module" {
   source = "./module"
