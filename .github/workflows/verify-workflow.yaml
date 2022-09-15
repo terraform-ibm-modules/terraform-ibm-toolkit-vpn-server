@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         testcase:
-          - vpc_count
+        #  - vpc_count
           - ocp4_latest
       fail-fast: false
       max-parallel: 1
