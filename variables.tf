@@ -46,6 +46,24 @@ variable "vpnclient_ip" {
   default     = "172.16.0.0/16"
 }
 
+variable "vpc_cidr" {
+  type        = string
+  description = "CIDR for the private VPC the VPN is connected to."
+  default     = "10.0.0.0/12"
+}
+
+variable "dns_cidr" {
+  type = string
+  description = "CIDR for the DNS servers in the private VPC the VPN is connected to."
+  default = "161.26.0.0/16"
+}
+
+variable "services_cidr" {
+  type = string
+  description = "CIDR for the services in the private VPC the VPN is connected to."
+  default = "166.8.0.0/14"
+}
+
 variable "client_dns" {
   type        = list(string)
   description = "Comma-separated DNS IPs for VPN Client Use ['161.26.0.10','161.26.0.11'] for public endpoints, or ['161.26.0.7','161.26.0.8'] for private endpoints"

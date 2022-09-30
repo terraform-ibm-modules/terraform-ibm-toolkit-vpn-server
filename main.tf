@@ -156,6 +156,9 @@ resource null_resource vpn_server {
       SERVER_CERT_CRN  =  ibm_certificate_manager_import.server_cert.id
       CLIENT_CERT_CRN  =  ibm_certificate_manager_import.client_cert.id
       VPNCLIENT_IP  =  var.vpnclient_ip
+      VPC_CIDR = var.vpc_cidr
+      DNS_CIDR = var.dns_cidr
+      SERVICES_CIDR = var.services_cidr
       CLIENT_DNS  =  join(",", var.client_dns)
       AUTH_METHOD =  var.auth_method
       SECGRP_ID  =  ibm_is_security_group.vpn_security_group.id
