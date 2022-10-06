@@ -19,9 +19,9 @@ variable "resource_group_name" {
   description = "The name of the IBM Cloud resource group where the resources will be provisioned."
 }
 
-variable "certificate_manager_id" {
+variable "secrets_manager_name" {
   type        = string
-  description = "The certificate manager instance id."
+  description = "The secrets manager instance name."
 }
 
 variable "vpc_id" {
