@@ -23,7 +23,7 @@ data "ibm_resource_group" "resource_group" {
   name = var.resource_group_name
 }
 
-# Generate the Server and Client certificates and import them into the Certificate Manager instance
+# Generate the Server and Client certificates
 resource null_resource create_certificates {
   provisioner "local-exec" {
     command = "${path.module}/scripts/create-certificates.sh"
@@ -69,26 +69,205 @@ data "local_file" "client_key" {
     filename = "${path.root}/certificates/private/client1.vpn.ibm.com.key"
 }
 
-resource "ibm_certificate_manager_import" "server_cert" {
-  certificate_manager_instance_id = var.certificate_manager_id
-  name                            = "vpn-server-cert"
-  description                     = "VPN server certificate"
-  data = {
-    content = data.local_file.server_cert.content
-    intermediate = data.local_file.ca.content
-    priv_key = data.local_file.server_key.content
+# Create group in Security Manager for VPN certificates
+locals {
+  sm_group_name = "vpn-cert-group"
+}
+
+data "ibm_resource_instance" "secrets-manager" {
+  name              = var.secrets_manager_name
+  resource_group_id = data.ibm_resource_group.resource_group.id
+  location          = var.region
+  service           = "secrets-manager"
+}
+
+resource "null_resource" "security_group" {
+
+    triggers = {
+      ibmcloud_api_key = var.ibmcloud_api_key
+      bin_dir          = module.clis.bin_dir
+      name             = local.sm_group_name
+      description      = "VPN Certificates Group"
+      region           = var.region
+      instance_id      = data.ibm_resource_instance.secrets-manager.guid
+    }
+
+    provisioner "local-exec" {
+        command = "${path.module}/scripts/create-group.sh"
+
+        environment = {
+          IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+          BIN_DIR           = self.triggers.bin_dir
+          NAME              = self.triggers.name
+          DESCRIPTION       = self.triggers.description
+          REGION            = self.triggers.region
+          INSTANCE_ID       = self.triggers.instance_id
+        }
+    }
+
+    provisioner "local-exec" {
+        when = destroy
+
+        command = "${path.module}/scripts/delete-group.sh"
+
+        environment = {
+          IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+          REGION            = self.triggers.region
+          BIN_DIR           = self.triggers.bin_dir
+          INSTANCE_ID       = self.triggers.instance_id
+          NAME              = self.triggers.name
+         }
+    }
+
+}
+
+data "external" "sm_group" {
+  depends_on = [null_resource.security_group]
+
+  program = ["bash", "${path.module}/scripts/get-group-id.sh"]
+
+  query = {
+    ibmcloud_api_key    = var.ibmcloud_api_key
+    bin_dir             = module.clis.bin_dir
+    group_name          = local.sm_group_name
+    region              = var.region   
+    instance_id         = data.ibm_resource_instance.secrets-manager.guid
   }
 }
 
-resource "ibm_certificate_manager_import" "client_cert" {
-  certificate_manager_instance_id = var.certificate_manager_id
-  name                            = "vpn-client-cert"
-  description                     = "VPN client certificate"
-  data = {
-    content = data.local_file.client_cert.content
-    intermediate = data.local_file.ca.content
-    priv_key = data.local_file.client_key.content
-  }
+# Import certificates to security manager group
+locals {
+  server-secret-name = "vpn-server-cert"
+  client-secret-name = "vpn-client-cert"
+}
+resource "null_resource" "server_cert_secret" {
+
+    triggers = {
+        ibmcloud_api_key = var.ibmcloud_api_key
+        bin_dir          = module.clis.bin_dir
+        name             = local.server-secret-name
+        description      = "VPN server certificate"
+        region           = var.region
+        instance_id      = data.ibm_resource_instance.secrets-manager.guid
+        group_id         = data.external.sm_group.result.group_id
+        labels           = ""
+        certificate      = replace("${data.local_file.server_cert.content}", "\n", "\\n")
+        private_key      = replace("${data.local_file.server_key.content}", "\n", "\\n")
+        intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
+    }
+
+    provisioner "local-exec" {
+        command = "${path.module}/scripts/import-certificate.sh"
+
+        environment = {
+            IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+            BIN_DIR           = self.triggers.bin_dir
+            NAME              = self.triggers.name
+            DESCRIPTION       = self.triggers.description
+            REGION            = self.triggers.region
+            INSTANCE_ID       = self.triggers.instance_id
+            GROUP_ID          = self.triggers.group_id
+            LABELS            = self.triggers.labels
+            CERT              = self.triggers.certificate
+            PRIV_KEY          = self.triggers.private_key
+            CA_CERT           = self.triggers.intermediate
+        }
+    }
+
+    provisioner "local-exec" {
+        when = destroy
+        command = "${path.module}/scripts/delete-secret.sh"
+
+        environment = {
+            IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+            BIN_DIR           = self.triggers.bin_dir
+            NAME              = self.triggers.name
+            REGION            = self.triggers.region
+            INSTANCE_ID       = self.triggers.instance_id
+            GROUP_ID          = self.triggers.group_id
+            TYPE              = "imported_cert"
+        }
+    }
+}
+
+data "external" "server-secret" {
+  depends_on = [null_resource.server_cert_secret]
+
+  program = ["bash", "${path.module}/scripts/get-secret-id.sh"]
+
+  query = {
+    ibmcloud_api_key    = var.ibmcloud_api_key
+    bin_dir             = module.clis.bin_dir
+    group_id            = data.external.sm_group.result.group_id
+    region              = var.region   
+    instance_id         = data.ibm_resource_instance.secrets-manager.guid
+    name                = local.server-secret-name
+  }  
+}
+
+resource "null_resource" "client_cert_secret" {
+
+    triggers = {
+        ibmcloud_api_key = var.ibmcloud_api_key
+        bin_dir          = module.clis.bin_dir
+        name             = local.client-secret-name
+        description      = "VPN client certificate"
+        region           = var.region
+        instance_id      = data.ibm_resource_instance.secrets-manager.guid
+        group_id         = data.external.sm_group.result.group_id
+        labels           = ""
+        certificate      = replace("${data.local_file.client_cert.content}", "\n", "\\n")
+        private_key      = replace("${data.local_file.client_key.content}", "\n", "\\n")
+        intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
+    }
+
+    provisioner "local-exec" {
+        command = "${path.module}/scripts/import-certificate.sh"
+
+        environment = {
+            IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+            BIN_DIR           = self.triggers.bin_dir
+            NAME              = self.triggers.name
+            DESCRIPTION       = self.triggers.description
+            REGION            = self.triggers.region
+            INSTANCE_ID       = self.triggers.instance_id
+            GROUP_ID          = self.triggers.group_id
+            LABELS            = self.triggers.labels
+            CERT              = self.triggers.certificate
+            PRIV_KEY          = self.triggers.private_key
+            CA_CERT           = self.triggers.intermediate
+        }
+    }
+
+    provisioner "local-exec" {
+        when = destroy
+        command = "${path.module}/scripts/delete-secret.sh"
+
+        environment = {
+            IBMCLOUD_API_KEY  = self.triggers.ibmcloud_api_key
+            BIN_DIR           = self.triggers.bin_dir
+            NAME              = self.triggers.name
+            REGION            = self.triggers.region
+            INSTANCE_ID       = self.triggers.instance_id
+            GROUP_ID          = self.triggers.group_id
+            TYPE              = "imported_cert"
+        }
+    }
+}
+
+data "external" "client-secret" {
+  depends_on = [null_resource.client_cert_secret]
+
+  program = ["bash", "${path.module}/scripts/get-secret-id.sh"]
+
+  query = {
+    ibmcloud_api_key    = var.ibmcloud_api_key
+    bin_dir             = module.clis.bin_dir
+    group_id            = data.external.sm_group.result.group_id
+    region              = var.region   
+    instance_id         = data.ibm_resource_instance.secrets-manager.guid
+    name                = local.client-secret-name
+  }  
 }
 
 # Update the subnet Access Control List that will be used for the VPN server
@@ -128,7 +307,6 @@ resource "ibm_is_security_group_rule" "outbound" {
 # Provision the VPN Server instance & create the VPN Server Routes 
 resource null_resource vpn_server {
   depends_on = [
-    ibm_certificate_manager_import.server_cert,
     ibm_is_security_group.vpn_security_group,
     ibm_is_security_group_rule.inbound,
     ibm_is_security_group_rule.outbound,
@@ -153,8 +331,8 @@ resource null_resource vpn_server {
       RESOURCE_GROUP  =  var.resource_group_name
       VPN_SERVER  =  local.name
       SUBNET_IDS  =  join(",", slice(var.subnet_ids, 0, min(2,length(var.subnet_ids))))
-      SERVER_CERT_CRN  =  ibm_certificate_manager_import.server_cert.id
-      CLIENT_CERT_CRN  =  ibm_certificate_manager_import.client_cert.id
+      SERVER_CERT_CRN  =  data.external.server-secret.result.crn
+      CLIENT_CERT_CRN  =  data.external.client-secret.result.crn
       VPNCLIENT_IP  =  var.vpnclient_ip
       VPC_CIDR = var.vpc_cidr
       DNS_CIDR = var.dns_cidr
