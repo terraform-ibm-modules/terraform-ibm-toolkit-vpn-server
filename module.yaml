@@ -19,19 +19,19 @@ versions:
       refs:
         - source: github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets
           version: ">= 1.9.0"
-    - id: cert-manager
+    - id: secrets-manager
       refs:
-        - source: github.com/cloud-native-toolkit/terraform-ibm-cert-manager
-          version: ">= 1.1.0"
+        - source: github.com/cloud-native-toolkit/terraform-ibm-secrets-manager
+          version: ">= 1.0.0"
   variables: 
     - name: resource_group_name
       moduleRef:
         id: resource_group
         output: name
-    - name: certificate_manager_id
+    - name: secrets_manager_name
       moduleRef:
-        id: cert-manager
-        output: id
+        id: secrets-manager
+        output: name
     - name: vpc_id
       moduleRef:
         id: subnets
