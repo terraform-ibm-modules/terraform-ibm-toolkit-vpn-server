@@ -74,13 +74,6 @@ locals {
   sm_group_name = "vpn-cert-group"
 }
 
-data "ibm_resource_instance" "secrets-manager" {
-  name              = var.secrets_manager_name
-  resource_group_id = data.ibm_resource_group.resource_group.id
-  location          = var.region
-  service           = "secrets-manager"
-}
-
 resource "null_resource" "security_group" {
 
     triggers = {
@@ -89,7 +82,7 @@ resource "null_resource" "security_group" {
       name             = local.sm_group_name
       description      = "VPN Certificates Group"
       region           = var.region
-      instance_id      = data.ibm_resource_instance.secrets-manager.guid
+      instance_id      = var.secrets_manager_guid
     }
 
     provisioner "local-exec" {
@@ -131,7 +124,7 @@ data "external" "sm_group" {
     bin_dir             = module.clis.bin_dir
     group_name          = local.sm_group_name
     region              = var.region   
-    instance_id         = data.ibm_resource_instance.secrets-manager.guid
+    instance_id         = var.secrets_manager_guid
   }
 }
 
@@ -148,7 +141,7 @@ resource "null_resource" "server_cert_secret" {
         name             = local.server-secret-name
         description      = "VPN server certificate"
         region           = var.region
-        instance_id      = data.ibm_resource_instance.secrets-manager.guid
+        instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
         labels           = ""
         certificate      = replace("${data.local_file.server_cert.content}", "\n", "\\n")
@@ -200,7 +193,7 @@ data "external" "server-secret" {
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
     region              = var.region   
-    instance_id         = data.ibm_resource_instance.secrets-manager.guid
+    instance_id         = var.secrets_manager_guid
     name                = local.server-secret-name
   }  
 }
@@ -213,7 +206,7 @@ resource "null_resource" "client_cert_secret" {
         name             = local.client-secret-name
         description      = "VPN client certificate"
         region           = var.region
-        instance_id      = data.ibm_resource_instance.secrets-manager.guid
+        instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
         labels           = ""
         certificate      = replace("${data.local_file.client_cert.content}", "\n", "\\n")
@@ -265,7 +258,7 @@ data "external" "client-secret" {
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
     region              = var.region   
-    instance_id         = data.ibm_resource_instance.secrets-manager.guid
+    instance_id         = var.secrets_manager_guid
     name                = local.client-secret-name
   }  
 }
