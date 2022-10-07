@@ -6,7 +6,7 @@ module "vpn_module" {
   region                = var.region
   ibmcloud_api_key      = var.ibmcloud_api_key
   resource_label        = "client2site"
-  secrets_manager_name  = module.secrets-manager.name
+  secrets_manager_guid  = module.secrets-manager.guid
   vpc_id                = module.subnets.vpc_id
   subnet_ids            = module.subnets.ids
 }

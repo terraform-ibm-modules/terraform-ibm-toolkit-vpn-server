@@ -22,16 +22,16 @@ versions:
     - id: secrets-manager
       refs:
         - source: github.com/cloud-native-toolkit/terraform-ibm-secrets-manager
-          version: ">= 1.0.0"
+          version: ">= 1.0.2"
   variables: 
     - name: resource_group_name
       moduleRef:
         id: resource_group
         output: name
-    - name: secrets_manager_name
+    - name: secrets_manager_guid
       moduleRef:
         id: secrets-manager
-        output: name
+        output: guid
     - name: vpc_id
       moduleRef:
         id: subnets
