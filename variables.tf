@@ -49,7 +49,7 @@ variable "vpnclient_ip" {
 variable "vpc_cidr" {
   type        = string
   description = "CIDR for the private VPC the VPN is connected to."
-  default     = "10.0.0.0/12"
+  default     = "10.0.0.0/8"
 }
 
 variable "dns_cidr" {
