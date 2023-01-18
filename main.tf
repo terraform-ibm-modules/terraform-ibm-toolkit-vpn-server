@@ -3,6 +3,7 @@ locals {
   prefix_name     = var.name_prefix != "" ? var.name_prefix : var.resource_group_name
   name            = lower(replace("${local.prefix_name}-vpn-${var.resource_label}", "_", "-"))
   vpn_profile     = "${path.root}/${local.name}.ovpn"
+  sm_region       = var.sm_region != "" ? var.sm_region : var.region
 }
 
 resource "random_string" "suffix" {
@@ -87,7 +88,7 @@ resource "null_resource" "security_group" {
       bin_dir          = module.clis.bin_dir
       name             = local.sm_group_name
       description      = "VPN Certificates Group"
-      region           = var.region
+      region           = local.sm_region
       instance_id      = var.secrets_manager_guid
     }
 
@@ -129,7 +130,7 @@ data "external" "sm_group" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_name          = local.sm_group_name
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
   }
 }
@@ -146,7 +147,7 @@ resource "null_resource" "server_cert_secret" {
         bin_dir          = module.clis.bin_dir
         name             = local.server-secret-name
         description      = "VPN server certificate"
-        region           = var.region
+        region           = local.sm_region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
         labels           = local.name
@@ -198,7 +199,7 @@ data "external" "server-secret" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
     name                = local.server-secret-name
   }  
@@ -211,7 +212,7 @@ resource "null_resource" "client_cert_secret" {
         bin_dir          = module.clis.bin_dir
         name             = local.client-secret-name
         description      = "VPN client certificate"
-        region           = var.region
+        region           = local.sm_region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
         labels           = local.name
@@ -263,7 +264,7 @@ data "external" "client-secret" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
     name                = local.client-secret-name
   }  
