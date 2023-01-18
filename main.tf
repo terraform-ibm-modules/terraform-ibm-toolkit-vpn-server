@@ -5,6 +5,12 @@ locals {
   vpn_profile     = "${path.root}/${local.name}.ovpn"
 }
 
+resource "random_string" "suffix" {
+  length           = 8
+  special          = false
+  upper            = false
+}
+
 module "clis" {
   source = "cloud-native-toolkit/clis/util"
 
@@ -71,7 +77,7 @@ data "local_file" "client_key" {
 
 # Create group in Security Manager for VPN certificates
 locals {
-  sm_group_name = "vpn-cert-group"
+  sm_group_name = "vpn-cert-group-${random_string.suffix.result}"
 }
 
 resource "null_resource" "security_group" {
@@ -130,8 +136,8 @@ data "external" "sm_group" {
 
 # Import certificates to security manager group
 locals {
-  server-secret-name = "vpn-server-cert"
-  client-secret-name = "vpn-client-cert"
+  server-secret-name = "vpn-server-cert-${random_string.suffix.result}"
+  client-secret-name = "vpn-client-cert-${random_string.suffix.result}"
 }
 resource "null_resource" "server_cert_secret" {
 
@@ -143,7 +149,7 @@ resource "null_resource" "server_cert_secret" {
         region           = var.region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
-        labels           = ""
+        labels           = local.name
         certificate      = replace("${data.local_file.server_cert.content}", "\n", "\\n")
         private_key      = replace("${data.local_file.server_key.content}", "\n", "\\n")
         intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
@@ -208,7 +214,7 @@ resource "null_resource" "client_cert_secret" {
         region           = var.region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
-        labels           = ""
+        labels           = local.name
         certificate      = replace("${data.local_file.client_cert.content}", "\n", "\\n")
         private_key      = replace("${data.local_file.client_key.content}", "\n", "\\n")
         intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
