@@ -8,6 +8,12 @@ variable "region" {
   description = "The IBM Cloud region where the resources will be provisioned."
 }
 
+variable "sm_region" {
+  type        = string
+  description = "The IBM Cloud region where the Service Manager resides if different from VPC and VPN server"
+  default     = ""
+}
+
 variable "resource_label" {                   
   type        = string                        
   description = "The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name."

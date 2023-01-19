@@ -15,7 +15,7 @@ if [[ -z "${ACCOUNT_ID}" ]]; then
   exit 1
 fi
 
-DATA="{\"metadata\": {\"collection_type\": \"application/vnd.ibm.secrets-manager.secret+json\",\"collection_total\": 1 }, \"resources\": [ { \"name\": \"${NAME}\", \"description\": \"${DESCRIPTION}\", \"secret_group_id\": \"${GROUP_ID}\", \"labels\": [\"test\",\"eu-gb\"], \"certificate\": \"${CERT}\", \"private_key\": \"${PRIV_KEY}\", \"intermediate\": \"${CA_CERT}\" } ] }"
+DATA="{\"metadata\": {\"collection_type\": \"application/vnd.ibm.secrets-manager.secret+json\",\"collection_total\": 1 }, \"resources\": [ { \"name\": \"${NAME}\", \"description\": \"${DESCRIPTION}\", \"secret_group_id\": \"${GROUP_ID}\", \"labels\": [ \"${LABELS}\" ], \"certificate\": \"${CERT}\", \"private_key\": \"${PRIV_KEY}\", \"intermediate\": \"${CA_CERT}\" } ] }"
 
 BASE_URL="https://${INSTANCE_ID}.${REGION}.secrets-manager.appdomain.cloud"
 

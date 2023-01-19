@@ -3,6 +3,13 @@ locals {
   prefix_name     = var.name_prefix != "" ? var.name_prefix : var.resource_group_name
   name            = lower(replace("${local.prefix_name}-vpn-${var.resource_label}", "_", "-"))
   vpn_profile     = "${path.root}/${local.name}.ovpn"
+  sm_region       = var.sm_region != "" ? var.sm_region : var.region
+}
+
+resource "random_string" "suffix" {
+  length           = 8
+  special          = false
+  upper            = false
 }
 
 module "clis" {
@@ -71,7 +78,7 @@ data "local_file" "client_key" {
 
 # Create group in Security Manager for VPN certificates
 locals {
-  sm_group_name = "vpn-cert-group"
+  sm_group_name = "vpn-cert-group-${random_string.suffix.result}"
 }
 
 resource "null_resource" "security_group" {
@@ -81,7 +88,7 @@ resource "null_resource" "security_group" {
       bin_dir          = module.clis.bin_dir
       name             = local.sm_group_name
       description      = "VPN Certificates Group"
-      region           = var.region
+      region           = local.sm_region
       instance_id      = var.secrets_manager_guid
     }
 
@@ -123,15 +130,15 @@ data "external" "sm_group" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_name          = local.sm_group_name
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
   }
 }
 
 # Import certificates to security manager group
 locals {
-  server-secret-name = "vpn-server-cert"
-  client-secret-name = "vpn-client-cert"
+  server-secret-name = "vpn-server-cert-${random_string.suffix.result}"
+  client-secret-name = "vpn-client-cert-${random_string.suffix.result}"
 }
 resource "null_resource" "server_cert_secret" {
 
@@ -140,10 +147,10 @@ resource "null_resource" "server_cert_secret" {
         bin_dir          = module.clis.bin_dir
         name             = local.server-secret-name
         description      = "VPN server certificate"
-        region           = var.region
+        region           = local.sm_region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
-        labels           = ""
+        labels           = local.name
         certificate      = replace("${data.local_file.server_cert.content}", "\n", "\\n")
         private_key      = replace("${data.local_file.server_key.content}", "\n", "\\n")
         intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
@@ -192,7 +199,7 @@ data "external" "server-secret" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
     name                = local.server-secret-name
   }  
@@ -205,10 +212,10 @@ resource "null_resource" "client_cert_secret" {
         bin_dir          = module.clis.bin_dir
         name             = local.client-secret-name
         description      = "VPN client certificate"
-        region           = var.region
+        region           = local.sm_region
         instance_id      = var.secrets_manager_guid
         group_id         = data.external.sm_group.result.group_id
-        labels           = ""
+        labels           = local.name
         certificate      = replace("${data.local_file.client_cert.content}", "\n", "\\n")
         private_key      = replace("${data.local_file.client_key.content}", "\n", "\\n")
         intermediate     = replace("${data.local_file.ca.content}", "\n", "\\n")
@@ -257,7 +264,7 @@ data "external" "client-secret" {
     ibmcloud_api_key    = var.ibmcloud_api_key
     bin_dir             = module.clis.bin_dir
     group_id            = data.external.sm_group.result.group_id
-    region              = var.region   
+    region              = local.sm_region   
     instance_id         = var.secrets_manager_guid
     name                = local.client-secret-name
   }  
