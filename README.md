@@ -1,12 +1,12 @@
 # Client 2 Site VPN
 
-This is a terraform module that will provision a client-to-site VPN on IBM Cloud.  _Note: This is a beta offering that is not supported by the IBM cloud Terraform provider yet, so it is implemented using a `local-exec` provisioner with a bash script to handle resource creation and configuration.
+This is a terraform module that will provision a client-to-site VPN on IBM Cloud.  _Note: This is an offering that is not supported by the IBM cloud Terraform provider yet, so it is implemented using a `local-exec` provisioner with a bash script to handle resource creation and configuration.
 
-This module will: 
+This module will:
 
 - Download necessary CLI dependencies (`jq`)
 - Create a group in a secrets manager instance
-- Create a server and a client certificate and import them into the secrets manager group
+- Create a server and a client certificate and import them into the secrets manager group, tagging secrets by the VPN server name
 - Update the ACL for the VPC subnet to allow for VPN ingress & egress
 - Create a security group and security group rules for the VPN server instance
 - Provision a VPN server
@@ -15,20 +15,22 @@ This module will:
 ## Software dependencies
 
 Dependencies:
+
 - [CLIs](https://github.com/cloud-native-toolkit/terraform-util-clis)
-- [Resource Group](https://github.com/cloud-native-toolkit/terraform-ibm-resource-group)
-- [Certificate Manager](https://github.com/cloud-native-toolkit/terraform-ibm-cert-manager)
-- [VPC Subnet](https://github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets)
+- [Resource Group](https://github.com/terraform-ibm-modules/terraform-ibm-toolkit-resource-group)
+- [Secrets Manager](https://github.com/terraform-ibm-modules/terraform-ibm-toolkit-cert-manager)
+- [VPC Subnet](https://github.com/terraform-ibm-modules/terraform-ibm-toolkit-vpc-subnets)
 
 ### Command-line tools
 
-- `terraform` - v1.2.8
+- `terraform` >= v1.2.8
 - `jq`
 - `ibmcloud`
 
 ### Terraform providers
 
-None
+- `ibm-cloud/ibm`
+- `hashicorp/random`
 
 ## Example usage
 
@@ -40,9 +42,8 @@ module "vpn_module" {
   region                = var.region
   ibmcloud_api_key      = var.ibmcloud_api_key
   resource_label        = "client2site"
-  secrets_manager_name  = module.secrets-manager.name
+  secrets_manager_name  = module.secrets-manager.guid
   vpc_id                = module.subnets.vpc_id
   subnet_ids            = module.subnets.ids
 }
 ```
-
