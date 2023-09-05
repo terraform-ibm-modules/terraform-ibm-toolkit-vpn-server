@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export PATH=$BIN_DIR:$PATH
-EASYRSA_PINNED_COMMIT=1600b3f 
+EASYRSA_PINNED_COMMIT=9850ced 
 
 if ! command -v git 1> /dev/null 2> /dev/null; then
   echo "git cli not found" >&2
@@ -29,7 +29,7 @@ fi
 
 
 echo "Generating VPN server certificate"
-./easyrsa build-server-full vpn-server.vpn.ibm.com nopass
+./easyrsa --notext build-server-full vpn-server.vpn.ibm.com nopass
 
 if [ ! -f "pki/issued/vpn-server.vpn.ibm.com.crt" ]
 then
@@ -45,7 +45,7 @@ fi
 
 
 echo "Generating VPN client certificate"
-./easyrsa build-client-full client1.vpn.ibm.com nopass
+./easyrsa --notext build-client-full client1.vpn.ibm.com nopass
 
 if [ ! -f "pki/issued/client1.vpn.ibm.com.crt" ]
 then

@@ -1,7 +1,6 @@
 # Client 2 Site VPN
 
-This is a terraform module that will provision a client-to-site VPN on IBM Cloud.  _Note: This is an offering that is not supported by the IBM cloud Terraform provider yet, so it is implemented using a `local-exec` provisioner with a bash script to handle resource creation and configuration.
-
+This is a terraform module that will provision a client-to-site VPN on IBM Cloud.
 This module will:
 
 - Download necessary CLI dependencies (`jq`)
