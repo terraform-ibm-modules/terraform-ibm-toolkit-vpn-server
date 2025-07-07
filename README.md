@@ -1,3 +1,14 @@
+> ⚠️ **Deprecation Notice**
+>
+> The `terraform-ibm-toolkit-vpn-server` module is **deprecated** and no longer maintained.
+>
+> Please use the actively maintained and up-to-date replacement module:
+> [terraform-ibm-client-to-site-vpn](https://github.com/terraform-ibm-modules/terraform-ibm-client-to-site-vpn)
+>
+> This newer module provides enhanced features, better support, and ongoing updates.
+
+
+
 # Client 2 Site VPN
 
 This is a terraform module that will provision a client-to-site VPN on IBM Cloud.  _Note: This is an offering that is not supported by the IBM cloud Terraform provider yet, so it is implemented using a `local-exec` provisioner with a bash script to handle resource creation and configuration.
