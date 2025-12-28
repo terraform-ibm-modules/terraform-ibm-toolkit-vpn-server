@@ -2,7 +2,7 @@
 # Resource Group Variables
 variable "resource_group_name" {
   type        = string
-  description = "Existing resource group where the IKS cluster will be provisioned."
+  description = "Existing resource group where vpn server will be provisioned"
 }
 
 variable "ibmcloud_api_key" {
@@ -12,7 +12,19 @@ variable "ibmcloud_api_key" {
 
 variable "region" {
   type        = string
-  description = "Region for VLANs defined in private_vlan_number and public_vlan_number."
+  description = "Region for VPC infrastructure services resources."
+}
+
+variable "sm_region" {
+  type        = string
+  description = "Region for secrets manager"
+  default     = ""
+}
+
+variable "sm_guid" {
+  type        = string
+  description = "Secrets manager service instance GUID"
+  default     = ""
 }
 
 
